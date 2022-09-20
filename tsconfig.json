@@ -4,12 +4,12 @@
         "noImplicitAny": true,
         "noImplicitReturns": true,
         "noImplicitThis": true,
-        "charset": "utf8",
+        "charset": "UTF8",
         "sourceMap": true,
-        "moduleResolution": "node",
+        "moduleResolution": "Node",
         "declaration": true,
-        "target": "es2015",
-        "module": "commonjs",
+        "target": "ES2015",
+        "module": "CommonJS",
         "outDir": "lib",
         "rootDirs": [
             "src"

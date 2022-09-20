@@ -1,7 +1,12 @@
-/src/
 /node_modules/
-/tsconfig.json
-/webpack.config.json
+/src/
 /.git/
 /.github/
-/.npmignore/
+
+/.editorconfig
+/.gitattributes
+/.gitignore
+/.markdownlint.json
+/.npmignore
+/tsconfig.json
+/webpack.config.ts
