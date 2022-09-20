@@ -18,7 +18,10 @@ export async function fetchWithTimeout<R>(resource: string, options: RequestInit
     const id = setTimeout(() => controller.abort(), timeout);
     const response = await fetch(resource, {
         ...options,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        },
         cache: "no-cache",
         signal: controller.signal
     });

@@ -135,10 +135,26 @@ interface SetMultipleEffectsResponse {
     results: SetSingleEffectResponse[];
 }
 
+interface DeleteSingleEffectRequest {
+    id: string;
+}
+
+interface DeleteMultipleEffectsRequest {
+    ids: string[];
+}
+
+interface DeleteSingleEffectResponse {
+    result: ErrorCode;
+}
+
+interface DeleteMultipleEffectsResponse {
+    results: DeleteSingleEffectResponse[];
+}
+
 export class RazerChromaSDK {
 
     /** URI of the Chroma SDK RESTful server */
-    static uri: string = "http://localhost:54235/razer/chromasdk";
+    static #initUri: string = "http://localhost:54235/razer/chromasdk";
 
     /** Heartbeat interval in milliseconds. */
     static heartbeatInterval: number = 3000;
@@ -148,25 +164,23 @@ export class RazerChromaSDK {
      * @returns
      *   the current Chroma SDK version that is present in the system.
      */
-    static async getVersionInfo(): Promise<VersionInfo> {
-        const response = await fetch(RazerChromaSDK.uri, {
+    static async getVersionInfo(uri: string = RazerChromaSDK.#initUri): Promise<VersionInfo> {
+        const responseData: VersionInfo = await fetchWithTimeout(uri, {
             method: "GET"
         });
-        const data: VersionInfo = await response.json();
-        return data;
+        return responseData;
     }
 
-    static async initialize(initData: InitializationRequestData): Promise<RazerChromaSDK> {
+    static async initialize(initData: InitializationRequestData, uri: string = RazerChromaSDK.#initUri): Promise<RazerChromaSDK> {
         validateInitData(initData);
-        const response = await fetch(RazerChromaSDK.uri, {
+        const responseData: InitializationResponseData = await fetchWithTimeout(uri, {
             method: "POST",
             body: JSON.stringify(initData)
         });
-        const data: InitializationResponseData = await response.json();
-        if (data.result != null && data.result !== ErrorCode.SUCCESS) {
-            throw new Error(`Initialization of Razer Chrome SDK failed: ${data.result}`);
+        if (responseData.result != null && responseData.result !== ErrorCode.SUCCESS) {
+            throw new Error(`Initialization of Razer Chrome SDK failed: ${responseData.result}`);
         }
-        return new RazerChromaSDK({ sessionId: data.sessionid!, uri: data.uri! })
+        return new RazerChromaSDK({ sessionId: responseData.sessionid!, uri: responseData.uri! })
     }
 
     #sessionId: number | null;
@@ -200,7 +214,7 @@ export class RazerChromaSDK {
         }
         this.#tick = NaN;
         this.#effects = new Effects(this);
-        this.#heartbeat.handle = setInterval(this.#heartbeat.fn, RazerChromaSDK.heartbeatInterval, this.uri);
+        this.#heartbeat.handle = setInterval(this.#heartbeat.fn.bind(this), RazerChromaSDK.heartbeatInterval, this.uri);
 
     }
     public get uri() {
@@ -287,11 +301,12 @@ class Effects {
             this.#effects.set(responseData.id, effect.effect);
             return responseData.id;
         }
-        throw new Error(`Creation of effect failed. Error code: {responseData.result}`);
+        throw new Error(`Creation of effect failed. Error code: ${responseData.result}`);
 
     }
 
     public async set(id: string): Promise<ErrorCode>;
+    public async set(ids: string[]): Promise<ErrorCode[]>;
     async set(idOrIds: string | string[]): Promise<ErrorCode | ErrorCode[]> {
         if (typeof idOrIds === "string") {
             const request: SetSingleEffectRequest = {
@@ -301,6 +316,35 @@ class Effects {
                 method: "PUT",
                 body: JSON.stringify(request)
             });
+            return responseData.result;
+        } else if (Array.isArray(idOrIds)) {
+            const request: SetMultipleEffectsRequest = {
+                ids: idOrIds
+            }
+            const responseData: SetMultipleEffectsResponse = await fetchWithTimeout(`${this.#sdk.uri}/effect`, {
+                method: "PUT",
+                body: JSON.stringify(request)
+            });
+            return responseData.results.map(result => result.result);
+        } else {
+            throw new Error(`Unexpected parameter type: ${typeof idOrIds}`);
+        }
+    }
+
+    public async delete(id: string): Promise<ErrorCode>;
+    public async delete(ids: string[]): Promise<ErrorCode[]>;
+    async delete(idOrIds: string | string[]): Promise<ErrorCode | ErrorCode[]> {
+        if (typeof idOrIds === "string") {
+            const request: DeleteSingleEffectRequest = {
+                id: idOrIds
+            }
+            const responseData: DeleteSingleEffectResponse = await fetchWithTimeout(`${this.#sdk.uri}/effect`, {
+                method: "DELETE",
+                body: JSON.stringify(request)
+            });
+            if (responseData.result === 0) {
+                this.#effects.delete(idOrIds);
+            }
             return responseData.result;
         } else if (Array.isArray(idOrIds)) {
             const request: SetMultipleEffectsRequest = {
