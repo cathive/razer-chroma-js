@@ -18,6 +18,7 @@ export async function fetchWithTimeout<R>(resource: string, options: RequestInit
     const id = setTimeout(() => controller.abort(), timeout);
     const response = await fetch(resource, {
         ...options,
+        //mode: "no-cors",
         headers: {
             "Accept": "application/json",
             "Content-Type": "application/json"

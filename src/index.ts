@@ -246,12 +246,16 @@ export class RazerChromaSDK {
 
 class Effects {
 
-    #effects: Map<string, any>;
+    #created: Map<string, any>;
     #sdk: RazerChromaSDK;
 
     constructor(sdk: RazerChromaSDK) {
-        this.#effects = new Map();
+        this.#created = new Map();
         this.#sdk = sdk
+    }
+
+    public get created(): Map<string, any> {
+        return this.#created;
     }
 
     //#region Effects on keyboards, see: https://assets.razerzone.com/dev_portal/REST/html/md__r_e_s_t_external_03_8keyboard.html
@@ -298,7 +302,7 @@ class Effects {
             body: JSON.stringify(effect)
         }, 5000);
         if (responseData.result === 0) {
-            this.#effects.set(responseData.id, effect.effect);
+            this.#created.set(responseData.id, effect.effect);
             return responseData.id;
         }
         throw new Error(`Creation of effect failed. Error code: ${responseData.result}`);
@@ -342,8 +346,8 @@ class Effects {
                 method: "DELETE",
                 body: JSON.stringify(request)
             });
-            if (responseData.result === 0) {
-                this.#effects.delete(idOrIds);
+            if (responseData.result === ErrorCode.SUCCESS) {
+                this.#created.delete(idOrIds);
             }
             return responseData.result;
         } else if (Array.isArray(idOrIds)) {
@@ -353,6 +357,11 @@ class Effects {
             const responseData: SetMultipleEffectsResponse = await fetchWithTimeout(`${this.#sdk.uri}/effect`, {
                 method: "PUT",
                 body: JSON.stringify(request)
+            });
+            responseData.results.forEach((result, index) => {
+                if (result.result == ErrorCode.SUCCESS) {
+                    this.#created.delete(idOrIds[index]);
+                }
             });
             return responseData.results.map(result => result.result);
         } else {
