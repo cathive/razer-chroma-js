@@ -12,6 +12,11 @@
         "type": "git",
         "url": "https://github.com/cathive/razer-chroma-js.git"
     },
+    "keywords": [
+        "chroma",
+        "razer",
+        "razer-chroma"
+    ],
     "bugs": {
         "url": "https://github.com/cathive/razer-chroma-js/issues"
     },
