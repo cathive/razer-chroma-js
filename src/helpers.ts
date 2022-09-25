@@ -29,3 +29,7 @@ export async function fetchWithTimeout<R>(resource: string, options: RequestInit
     clearTimeout(id);
     return (await response.json()) as R;
 }
+
+export function clamp(v: number, min: number, max: number): number {
+    return v < min ? min : v > max ? max : v;
+}
