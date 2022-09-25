@@ -1,14 +1,19 @@
 
-export enum Effect {
+export type Effect = "CHROMA_NONE"
+                   | "CHROMA_STATIC"
+                   | "CHROMA_CUSTOM"
+                   | "CHROMA_CUSTOM2"
+                   | "CHROMA_CUSTOM_KEY";
 
-    NONE = "CHROMA_NONE",
+export namespace Effect {
+    export const NONE = "CHROMA_NONE";
 
-    STATIC = "CHROMA_STATIC",
+    export const STATIC = "CHROMA_STATIC";
 
-    CUSTOM = "CHROMA_CUSTOM",
+    export const CUSTOM = "CHROMA_CUSTOM";
 
-    CUSTOM2 = "CHROMA_CUSTOM2",
+    export const CUSTOM2 = "CHROMA_CUSTOM2";
 
-    CUSTOM_KEY = "CHROMA_CUSTOM_KEY"
-
+    export const CUSTOM_KEY = "CHROMA_CUSTOM_KEY";
 }
+Object.freeze(Effect);

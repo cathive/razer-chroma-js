@@ -1,57 +1,60 @@
+export type ErrorCode = number;
+
 /**
  * Error codes for Chroma SDK
  */
-export enum ErrorCode {
+export namespace ErrorCode {
 
     /** Invalid. */
-    INVALID = -1,
+    export const INVALID: ErrorCode = -1;
 
     /** Success. */
-    SUCCESS = 0,
+    export const SUCCESS: ErrorCode = 0;
 
     /** Access denied. */
-    ACCESS_DENIED = 5,
+    export const ACCESS_DENIED: ErrorCode = 5;
 
     /** Invalid handle. */
-    INVALID_HANDLE = 6,
+    export const INVALID_HANDLE: ErrorCode = 6;
 
     /** Not supported */
-    NOT_SUPPORTED = 50,
+    export const NOT_SUPPORTED: ErrorCode = 50;
 
     /** Invalid parameter. */
-    INVALID_PARAMETER= 87,
+    export const INVALID_PARAMETER: ErrorCode = 87;
 
     /** The service has not been started. */
-    SERVICE_NOT_ACTIVE = 1062,
+    export const SERVICE_NOT_ACTIVE: ErrorCode = 1062;
 
     /** Cannot start more than one instance of the specified program. */
-    SINGLE_INSTANCE_APP  = 1152,
+    export const SINGLE_INSTANCE_APP: ErrorCode = 1152;
 
     /** Device not connected. */
-    DEVICE_NOT_CONNECTED = 1167,
+    export const DEVICE_NOT_CONNECTED: ErrorCode = 1167;
 
     /** Element not found. */
-    NOT_FOUND = 1168,
+    export const NOT_FOUND: ErrorCode = 1168;
 
     /** Request aborted. */
-    REQUEST_ABORTED = 1235,
+    export const REQUEST_ABORTED: ErrorCode = 1235;
 
     /** An attempt was made to perform an initialization operation when initialization has already been completed. */
-    ALREADY_INITIALIZED = 1247,
+    export const ALREADY_INITIALIZED: ErrorCode = 1247;
 
     /** Resource not available or disabled. */
-    RESOURCE_DISABLED = 4309,
+    export const RESOURCE_DISABLED: ErrorCode = 4309;
 
     /** Device not available or supported. */
-    DEVICE_NOT_AVAILABLE = 4319,
+    export const DEVICE_NOT_AVAILABLE: ErrorCode = 4319;
 
     /** The group or resource is not in the correct state to perform the requested operation. */
-    NOT_VALID_STATE = 5023,
+    export const NOT_VALID_STATE: ErrorCode = 5023;
 
     /** No more items. */
-    NO_MORE_ITEMS = 259,
+    export const NO_MORE_ITEMS: ErrorCode = 259;
 
     /** General failure. */
-    FAILED = 2147500037
+    export const FAILED: ErrorCode = 2147500037;
 
 }
+Object.freeze(ErrorCode);

@@ -1,4 +1,6 @@
+import { ErrorCode } from "./ErrorCode";
+
 export interface CreateEffectResponseData {
     id: string;
-    result: number;
+    result: ErrorCode;
 }
