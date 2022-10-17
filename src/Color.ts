@@ -117,3 +117,4 @@ export class Color {
     }
 
 }
+Object.freeze(Color);

@@ -1,9 +1,14 @@
 {
     "compilerOptions": {
+        "allowUnreachableCode": false,
+        "allowSyntheticDefaultImports": false,
+        "allowUnusedLabels": false,
         "strict": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,
         "noImplicitThis": true,
+        "noImplicitOverride": true,
+        "noFallthroughCasesInSwitch": true,
         "charset": "UTF8",
         "sourceMap": true,
         "moduleResolution": "Node",

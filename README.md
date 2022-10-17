@@ -2,7 +2,6 @@
 
 This library can be used to interact with the RESTful API of the [Razer Chroma SDK](https://assets.razerzone.com/dev_portal/REST/html/index.html).
 
-
 ## Usage
 
 You can use this library from Node.js or your browser.
@@ -10,10 +9,9 @@ You can use this library from Node.js or your browser.
 Internally, the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) will
 be used to direct web requests towards the Chroma SDK RESTful endpoint on a local machine.
 
-
 ### Initialization
 
-The following TypeScript example shows how to obtain an instance of the `RazerChromaSDK` client  (the component that speaks to the RESful endpoint on localhost):
+The following TypeScript example shows how to obtain an instance of the `RazerChromaSDK` client  (the component that speaks to the RESTful endpoint on localhost):
 
 ```typescript
 import { RazerChromaSDK, Category, Device } from "razer-chroma-sdk";
