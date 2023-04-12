@@ -1,11 +1,12 @@
 import { VersionInfo } from "./VersionInfo";
 import { Device } from "./Device";
+import { Effect } from "./Effect";
 import { ErrorCode } from "./ErrorCode";
 import { InitializationRequestData } from "./InitializationRequestData";
 import { InitializationResponseData } from "./InitializationResponseData";
 import { Color } from "./Color";
 import { HeartbeatResponseData } from "./HeartbeatResponseData";
-import { fetchWithTimeout } from "./helpers";
+import { fetchWithTimeout, sleep } from "./helpers";
 import { CreateEffectRequestData } from "./CreateEffectRequestData";
 import { CreateEffectResponseData } from "./CreateEffectResponseData";
 import { NUM_ARRAY_6_BY_22, NUM_ARRAY_9_BY_7, NUM_ARRAY_1_BY_20, NUM_ARRAY_1_BY_5, NUM_ARRAY_4_BY_5, NUM_ARRAY_8_BY_24} from "./arrays";
@@ -47,7 +48,10 @@ function validateInitData(initData: InitializationRequestData): void {
 
 interface RazerChromaSDKInitArgs {
     readonly sessionId: number;
-    readonly uri: string;
+    readonly uri: URL;
+    readonly devices: {
+        supported: Set<Device>
+    };
 }
 
 interface SetSingleEffectRequest {
@@ -84,25 +88,28 @@ interface DeleteMultipleEffectsResponse {
 
 export class RazerChromaSDK {
 
-    /** URI of the Chroma SDK RESTful server */
-    static #initUri: string = "http://localhost:54235/razer/chromasdk";
+    /**
+     * URI of the Chroma SDK RESTful server
+     * See: https://assets.razerzone.com/dev_portal/REST/html/index.html#uri
+     */
+    static #initUri: URL = new URL("http://localhost:54235/razer/chromasdk");
 
     /** Heartbeat interval in milliseconds. */
-    static heartbeatInterval: number = 3000;
+    public static heartbeatInterval: number = 3000;
 
     /**
      * Returns the current Chroma SDK version that is present in the system.
      * @returns
      *   the current Chroma SDK version that is present in the system.
      */
-    static async getVersionInfo(uri: string = RazerChromaSDK.#initUri): Promise<VersionInfo> {
+    public static async getVersionInfo(uri: string|URL = RazerChromaSDK.#initUri): Promise<VersionInfo> {
         const responseData: VersionInfo = await fetchWithTimeout(uri, {
             method: "GET"
         });
         return responseData;
     }
 
-    static async initialize(initData: InitializationRequestData, uri: string = RazerChromaSDK.#initUri): Promise<RazerChromaSDK> {
+    static async initialize(initData: InitializationRequestData, uri: string|URL = RazerChromaSDK.#initUri): Promise<RazerChromaSDK> {
         validateInitData(initData);
         const responseData: InitializationResponseData = await fetchWithTimeout(uri, {
             method: "POST",
@@ -111,41 +118,66 @@ export class RazerChromaSDK {
         if (responseData.result != null && responseData.result !== ErrorCode.SUCCESS) {
             throw new Error(`Initialization of Razer Chrome SDK failed: ${responseData.result}`);
         }
-        return new RazerChromaSDK({ sessionId: responseData.sessionid!, uri: responseData.uri! })
+        const sdk = new RazerChromaSDK({
+            sessionId: responseData.sessionid!,
+            uri: new URL(responseData.uri!),
+            devices: {
+                supported: new Set(initData.device_supported)
+            }
+        });
+
+        // Workaround: we are not fully operational for a few moments, which is pretty
+        // hard to detect in a sane way for now.
+        await sleep(500);
+
+        return sdk;
     }
 
     #sessionId: number | null;
-    #uri: string;
+    #uri: URL;
     #heartbeat: {
         handle: number,
-        fn: () => Promise<void>
+        fn: () => Promise<unknown>
     }
     #tick: number;
 
     #effects: Effects;
 
+    #devices: { supported: Set<Device> };
+    public get devices() {
+        return this.#devices;
+    }
+
     private constructor(initArgs: RazerChromaSDKInitArgs) {
         if (initArgs == null || initArgs.sessionId == null || initArgs.uri == null) {
             throw new Error(`Invalid initialization arguments. Did you correctly call RazerChromaSDK.initialize() to obtain a new client instance?`)
         }
+
+        this.#devices = initArgs.devices;
+        Object.freeze(this.#devices);
+
         this.#sessionId = initArgs.sessionId;
+
         this.#uri = initArgs.uri;
         this.#heartbeat = {
             handle: NaN,
-            fn: async () => {
+            fn: (async () => {
                 try {
                     const responseData: HeartbeatResponseData = await fetchWithTimeout(`${this.#uri}/heartbeat`, {
                         method: "PUT"
                     });
                     this.#tick = responseData.tick;
-                } catch (e) {
-                    console.log(e);
+                } catch (e: unknown) {
+                    // TODO Propagate error? Call error handler? Notify someone?
+                    console.error(`Heartbeat failed: ${e}`);
+                    return e;
                 }
-            }
-        }
+            }).bind(this)
+        };
         this.#tick = NaN;
         this.#effects = new Effects(this);
-        this.#heartbeat.handle = setInterval(this.#heartbeat.fn.bind(this), RazerChromaSDK.heartbeatInterval, this.uri);
+
+        this.#heartbeat.handle = setInterval(this.#heartbeat.fn, RazerChromaSDK.heartbeatInterval, this.uri);
 
     }
     public get uri() {
@@ -190,48 +222,51 @@ class Effects {
     }
 
     //#region Effects on keyboards, see: https://assets.razerzone.com/dev_portal/REST/html/md__r_e_s_t_external_03_8keyboard.html
-    public async create(device: "keyboard", effect: { effect: "CHROMA_NONE" }): Promise<string>;
-    public async create(device: "keyboard", effect: { effect: "CHROMA_STATIC", param: { color: Color|number } }): Promise<string>;
-    public async create(device: "keyboard", effect: { effect: "CHROMA_CUSTOM2", param: { color: NUM_ARRAY_8_BY_24, key: NUM_ARRAY_6_BY_22 } }): Promise<string>;
-    public async create(device: "keyboard", effect: { effect: "CHROMA_CUSTOM", param: NUM_ARRAY_6_BY_22 }): Promise<string>;
-    public async create(device: "keyboard", effect: { effect: "CHROMA_CUSTOM_KEY", param: { color: NUM_ARRAY_6_BY_22, key: NUM_ARRAY_6_BY_22 } }): Promise<string>;
+    public async create(device: typeof Device.KEYBOARD, effect: { effect: typeof Effect.NONE }): Promise<string>;
+    public async create(device: typeof Device.KEYBOARD, effect: { effect: "CHROMA_STATIC", param: { color: Color|number } }): Promise<string>;
+    public async create(device: typeof Device.KEYBOARD, effect: { effect: "CHROMA_CUSTOM2", param: { color: NUM_ARRAY_8_BY_24, key: NUM_ARRAY_6_BY_22 } }): Promise<string>;
+    public async create(device: typeof Device.KEYBOARD, effect: { effect: "CHROMA_CUSTOM", param: NUM_ARRAY_6_BY_22 }): Promise<string>;
+    public async create(device: typeof Device.KEYBOARD, effect: { effect: "CHROMA_CUSTOM_KEY", param: { color: NUM_ARRAY_6_BY_22, key: NUM_ARRAY_6_BY_22 } }): Promise<string>;
     //#endregion
 
     //#region Effects on mice, see: https://assets.razerzone.com/dev_portal/REST/html/md__r_e_s_t_external_04_8mouse.html
-    public async create(device: "mouse", effect: { effect: "CHROMA_NONE" }): Promise<string>;
-    public async create(device: "mouse", effect: { effect: "CHROMA_STATIC", param: { color: Color|number } }): Promise<string>;
-    public async create(device: "mouse", effect: { effect: "CHROMA_CUSTOM2", param: NUM_ARRAY_9_BY_7 }): Promise<string>;
+    public async create(device: typeof Device.MOUSE, effect: { effect: "CHROMA_NONE" }): Promise<string>;
+    public async create(device: typeof Device.MOUSE, effect: { effect: "CHROMA_STATIC", param: { color: Color|number } }): Promise<string>;
+    public async create(device: typeof Device.MOUSE, effect: { effect: "CHROMA_CUSTOM2", param: NUM_ARRAY_9_BY_7 }): Promise<string>;
     //#endregion
 
     //#region Effects on mousepads, see: https://assets.razerzone.com/dev_portal/REST/html/md__r_e_s_t_external_05_8mousemat.html
-    public async create(device: "mousepad", effect: { effect: "CHROMA_NONE" }): Promise<string>;
-    public async create(device: "mousepad", effect: { effect: "CHROMA_STATIC", param: { color: Color|number } }): Promise<string>;
-    public async create(device: "mousepad", effect: { effect: "CHROMA_CUSTOM", param: NUM_ARRAY_1_BY_20 }): Promise<string>;
+    public async create(device: typeof Device.MOUSEPAD, effect: { effect: "CHROMA_NONE" }): Promise<string>;
+    public async create(device: typeof Device.MOUSEPAD, effect: { effect: "CHROMA_STATIC", param: { color: Color|number } }): Promise<string>;
+    public async create(device: typeof Device.MOUSEPAD, effect: { effect: "CHROMA_CUSTOM", param: NUM_ARRAY_1_BY_20 }): Promise<string>;
     //#endregion
 
     //#region Effects on headsets, see: https://assets.razerzone.com/dev_portal/REST/html/md__r_e_s_t_external_06_8headset.html
-    public async create(device: "headset", effect: { effect: "CHROMA_NONE" }): Promise<string>;
-    public async create(device: "headset", effect: { effect: "CHROMA_STATIC", param: { color: Color|number } }): Promise<string>;
-    public async create(device: "headset", effect: { effect: "CHROMA_CUSTOM", param: NUM_ARRAY_1_BY_5 }): Promise<string>;
+    public async create(device: typeof Device.HEADSET, effect: { effect: "CHROMA_NONE" }): Promise<string>;
+    public async create(device: typeof Device.HEADSET, effect: { effect: "CHROMA_STATIC", param: { color: Color|number } }): Promise<string>;
+    public async create(device: typeof Device.HEADSET, effect: { effect: "CHROMA_CUSTOM", param: NUM_ARRAY_1_BY_5 }): Promise<string>;
     //#endregion
 
     //#region Effects on headsets, see: https://assets.razerzone.com/dev_portal/REST/html/md__r_e_s_t_external_06_8headset.html
-    public async create(device: "keypad", effect: { effect: "CHROMA_NONE" }): Promise<string>;
-    public async create(device: "keypad", effect: { effect: "CHROMA_STATIC", param: { color: number } }): Promise<string>;
-    public async create(device: "keypad", effect: { effect: "CHROMA_CUSTOM", param: NUM_ARRAY_4_BY_5 }): Promise<string>;
+    public async create(device: typeof Device.KEYPAD, effect: { effect: "CHROMA_NONE" }): Promise<string>;
+    public async create(device: typeof Device.KEYPAD, effect: { effect: "CHROMA_STATIC", param: { color: number } }): Promise<string>;
+    public async create(device: typeof Device.KEYPAD, effect: { effect: "CHROMA_CUSTOM", param: NUM_ARRAY_4_BY_5 }): Promise<string>;
     //#endregion
 
     //#region Effects on Chroma Linked Devices, see: https://assets.razerzone.com/dev_portal/REST/html/md__r_e_s_t_external_08_8chromalink.html
-    public async create(device: "chromalink", effect: { effect: "CHROMA_NONE" }): Promise<string>;
-    public async create(device: "chromalink", effect: { effect: "CHROMA_STATIC", param: { color: Color|number } }): Promise<string>;
-    public async create(device: "chromalink", effect: { effect: "CHROMA_CUSTOM", param: NUM_ARRAY_1_BY_5 }): Promise<string>;
+    public async create(device: typeof Device.CHROMALINK, effect: { effect: typeof Effect.NONE }): Promise<string>;
+    public async create(device: typeof Device.CHROMALINK, effect: { effect: typeof Effect.STATIC, param: { color: Color|number } }): Promise<string>;
+    public async create(device: typeof Device.CHROMALINK, effect: { effect: typeof Effect.CUSTOM, param: NUM_ARRAY_1_BY_5 }): Promise<string>;
     //#endregion
 
     public async create(device: Device, effect: CreateEffectRequestData): Promise<string> {
+        if (!this.#sdk.devices.supported.has(device)) {
+            throw new Error(`Unable to create effect for device "${device}". Did you include the device in "device_supported" during initialization?`);
+        }
         const responseData: CreateEffectResponseData = await fetchWithTimeout(`${this.#sdk.uri}/${device}`, {
             method: "POST",
             body: JSON.stringify(effect)
-        }, 5000);
+        });
         if (responseData.result === ErrorCode.SUCCESS) {
             this.#created.set(responseData.id, effect.effect);
             return responseData.id;

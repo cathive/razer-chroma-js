@@ -13,12 +13,12 @@ const DEFAULT_TIMEOUT_MS = 2000;
  * @returns
  *
  */
-export async function fetchWithTimeout<R>(resource: string, options: RequestInit = {}, timeout: number = DEFAULT_TIMEOUT_MS): Promise<R> {
+export async function fetchWithTimeout<R>(resource: string|URL, options: RequestInit = {}, timeout: number = DEFAULT_TIMEOUT_MS): Promise<R> {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeout);
     const response = await fetch(resource, {
         ...options,
-        //mode: "no-cors",
+        mode: "cors",
         headers: {
             "Accept": "application/json",
             "Content-Type": "application/json"
@@ -27,9 +27,21 @@ export async function fetchWithTimeout<R>(resource: string, options: RequestInit
         signal: controller.signal
     });
     clearTimeout(id);
-    return (await response.json()) as R;
+    if (response.ok) {
+        return (await response.json()) as R;
+    } else {
+        throw new Error(`${response.status}: ${response.statusText}`);
+    }
 }
 
 export function clamp(v: number, min: number, max: number): number {
     return v < min ? min : v > max ? max : v;
+}
+
+export async function sleep(ms: number): Promise<void> {
+    return new Promise<void>(resolve => {
+        setTimeout(() => {
+            resolve();
+        }, ms);
+    });
 }
