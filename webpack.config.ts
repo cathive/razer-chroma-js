@@ -1,6 +1,6 @@
 import * as path from "node:path";
 
-import {Configuration, WebpackPluginInstance} from "webpack";
+import {Configuration} from "webpack";
 
 const commonConfig: Configuration = {
   mode: "production",
