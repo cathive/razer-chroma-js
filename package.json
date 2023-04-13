@@ -39,5 +39,6 @@
         "prepublish": "npm -s run build",
         "test": "jest"
     },
-    "main": "lib/main-node"
+    "main": "lib/main-node",
+    "browser": "dist/razer-chroma.web.dist.js"
 }

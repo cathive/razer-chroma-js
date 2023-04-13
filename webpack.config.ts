@@ -7,42 +7,30 @@ const commonConfig: Configuration = {
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
-        use: "ts-loader",
+        test: /\.js$/,
         exclude: /node_modules/,
       },
     ],
   },
   resolve: {
-    extensions: [".tsx", ".ts", ".js"],
+    extensions: [".js"],
   },
 }
 
 const webConfig: Configuration = {
   ...commonConfig,
   target: "web",
-  entry: "./src/main-web.ts",
+  entry: {
+    main: "./lib/main-web.js"
+  },
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "lib.web.js",
-  },
-  //…
+    filename: "razer-chroma.web.dist.js",
+  }
 };
-
-const nodeConfig: Configuration = {
-    ...commonConfig,
-    target: "node",
-    entry: "./src/main-node.ts",
-    output: {
-      path: path.resolve(__dirname, "dist"),
-      filename: "lib.node.js",
-    },
-    //…
-  };
 
 const allConfigurations = [
     webConfig,
-    nodeConfig
 ];
 
 export default allConfigurations;
