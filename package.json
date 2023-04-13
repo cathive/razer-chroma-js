@@ -1,7 +1,7 @@
 {
     "name": "razer-chroma-sdk",
     "description": "Functionality to access the Razer Chroma SDK using it's RESTful API",
-    "version": "0.0.1-pre.5",
+    "version": "0.0.1",
     "author": {
         "name": "Benjamin P. Jung",
         "email": "headcr4sh@gmail.com"
