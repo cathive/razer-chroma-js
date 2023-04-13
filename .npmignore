@@ -1,5 +1,7 @@
 /node_modules/
 /src/
+/test/
+/examples/
 /.git/
 /.github/
 
@@ -10,3 +12,4 @@
 /.npmignore
 /tsconfig.json
 /webpack.config.ts
+/jest.config.js

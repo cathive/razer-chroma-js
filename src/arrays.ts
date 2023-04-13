@@ -34,7 +34,7 @@ export type NUM_ARRAY_9_BY_7 = [
 ];
 
 export type NUM_ARRAY_1_BY_20 = [
-    [r1c1: number, r1c2: number, r1c3: number, r1c4: number, r1c5: number, r1c6: number, r1c7: number, r1c8: number, r1c9: number, r1c10: number, r1c11: number, r1c12: number, r1c13: number, r1c14: number, r1c15: number, r1c16: number, r1c17: number, r1c18: number, r1c19: number, r1c20: number ]
+    [r1c1: number, r1c2: number, r1c3: number, r1c4: number, r1c5: number, r1c6: number, r1c7: number, r1c8: number, r1c9: number, r1c10: number, r1c11: number, r1c12: number, r1c13: number, r1c14: number, r1c15: number, r1c16: number, r1c17: number, r1c18: number, r1c19: number, r1c20: number]
 ];
 
 export type NUM_ARRAY_1_BY_5 = [

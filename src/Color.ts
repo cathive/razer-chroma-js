@@ -5,47 +5,47 @@ const BGR_REGEXP: RegExp = /^#?(?<red>[a-f\d]{2})(?<green>[a-f\d]{2})(?<blue>[a-
 export class Color {
 
     static readonly #BLACK: Color = new Color("#000000");
-    public static get BLACK() {
+    public static get BLACK(): Color {
         return Color.#BLACK;
     }
 
     static readonly #WHITE: Color = new Color(255, 255, 255);
-    public static get WHITE() {
+    public static get WHITE(): Color {
         return Color.#WHITE;
     }
 
     static readonly #RED: Color = new Color("#ff0000");
-    public static get RED() {
+    public static get RED(): Color {
         return Color.#RED;
     }
 
     static readonly #GREEN: Color = new Color("#00ff00");
-    public static get GREEN() {
+    public static get GREEN(): Color {
         return Color.#GREEN;
     }
 
     static readonly #BLUE: Color = new Color("#0000ff");
-    public static get BLUE() {
+    public static get BLUE(): Color {
         return Color.#BLUE;
     }
 
     static readonly #ORANGE: Color = new Color("#ffa500");
-    public static get ORANGE() {
+    public static get ORANGE(): Color {
         return Color.#ORANGE;
     }
 
     static readonly #PINK: Color = new Color("#ff00ff");
-    public static get PINK() {
+    public static get PINK(): Color {
         return Color.#PINK;
     }
 
     static readonly #PURPLE: Color = new Color("#800080");
-    public static get PURPLE() {
+    public static get PURPLE(): Color {
         return Color.#PURPLE;
     }
 
     static readonly #YELLOW: Color = new Color(255, 255, 0);
-    public static get YELLOW() {
+    public static get YELLOW(): Color {
         return Color.#YELLOW;
     }
 
@@ -86,7 +86,7 @@ export class Color {
         }
     }
 
-    public toBGR() {
+    public toBGR(): number {
         let rHex = this.red.toString(16);
         if (rHex.length < 2) {
             rHex = `0${rHex}`;
@@ -108,12 +108,12 @@ export class Color {
         return parseInt(result, 16);
     }
 
-    public toJSON() {
+    public toJSON(): number {
         return this.toBGR();
     }
 
-    public toString() {
-        return `Color(red:${this.red},green:${this.green},blue:${this.blue})`;
+    public toString(): String {
+        return `Color <red: ${this.red}, green: ${this.green}, blue: ${this.blue}>`;
     }
 
 }

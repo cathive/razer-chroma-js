@@ -9,12 +9,14 @@ You can use this library from Node.js or your browser.
 Internally, the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) will
 be used to direct web requests towards the Chroma SDK RESTful endpoint on a local machine.
 
-### Initialization
+### Full example
 
-The following TypeScript example shows how to obtain an instance of the `RazerChromaSDK` client  (the component that speaks to the RESTful endpoint on localhost):
+The following TypeScript example shows how to obtain an instance of the `RazerChromaSDK` client
+(the component that speaks to the RESTful endpoint on localhost) and how to use the instance to
+perform some basic operations:
 
 ```typescript
-import { RazerChromaSDK, Category, Device } from "razer-chroma-sdk";
+import { RazerChromaSDK, Category, Device, Effect, Color } from "razer-chroma-sdk";
 
 (async () => {
 
@@ -29,8 +31,11 @@ import { RazerChromaSDK, Category, Device } from "razer-chroma-sdk";
         category: Category.GAME
     });
 
-    // Yay! Now let's do some fancy stuff.
-    // ...
+    const mouseBlueFx = await sdk.effects.create(Device.MOUSE, {
+        effect: Effect.STATIC,
+        param: { color: Color.BLUE }
+    });
+    await sdk.effects.set(mouseBlueFx);
 
     // Don't forget to un-initialize the SDK after using it, to free up resources.
     await sdk.uninitialize();
@@ -38,33 +43,10 @@ import { RazerChromaSDK, Category, Device } from "razer-chroma-sdk";
 })();
 ```
 
-### Un-initialization
+### Important note about un-initialization
 
-As a user of this library you are always responsible for calling the `async unitialize()` method
+As a user of this library you are always responsible for calling the `async uninitialize()` method
 on all SDK instances created by your code to free up resources.
-
-### Creating and using effects
-
-Once you have obtained an instance of a `RazerChromaSDK`, you can use this instance to create and
-set effects on your devices.
-
-The following TypeScript example shows how to set a static light on your mousepad:
-
-```typescript
-let sdk: RazerChromaSDK; // Initialized somewhere else. See example from above.
-
-(async () => {
-  const effectId = await sdk.effects.create(
-    Device.MOUSEPAD, {
-      effect: Effect.STATIC,
-      param: {
-        color: 255
-      }
-    }
-  );
-  await sdk.effects.set(effectId);
-})();
-```
 
 ## Further documentation
 

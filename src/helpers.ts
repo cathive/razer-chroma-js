@@ -17,14 +17,14 @@ export async function fetchWithTimeout<R>(resource: string|URL, options: Request
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeout);
     const response = await fetch(resource, {
-        ...options,
         mode: "cors",
         headers: {
             "Accept": "application/json",
             "Content-Type": "application/json"
         },
         cache: "no-cache",
-        signal: controller.signal
+        signal: controller.signal,
+        ...options
     });
     clearTimeout(id);
     if (response.ok) {
